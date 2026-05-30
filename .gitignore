@@ -1,0 +1,30 @@
+# ==========================================================================
+#  NEVER commit migration payload or secrets. Only the scripts + docs ship.
+#  This repo must contain ONLY: Install-Cisco.ps1, Run-*.cmd, *.md, .gitignore
+# ==========================================================================
+
+# Cisco installers - licensed, not redistributable
+*.msi
+
+# Org secrets / identity
+OrgInfo.json
+ISEPostureCFG.xml
+*.cer
+*.crt
+*.pfx
+*.p12
+*.pem
+*.key
+
+# Runtime logs (hostnames, paths)
+*.log
+logs/
+
+# Source manual (may contain org-specific info)
+*.pdf
+
+# Whole migration folder if ever copied in
+Migration/
+Umbrella-*/
+**/Umbrella/
+**/ISE Posture/
