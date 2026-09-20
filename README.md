@@ -14,11 +14,11 @@ Three phases run in sequence:
 
 | Phase | What happens |
 |-------|-------------|
-| **LOOK** | Read-only preflight. Finds every required file, checks admin rights. Prints GREEN or RED. Changes nothing. |
+| **LOOK** | Validation-only preflight. Finds every required file, checks admin rights, and prints GREEN or RED. It skips installation actions but writes a local log. |
 | **INSTALL** | Imports the root CA cert, installs all 5 MSI modules in the correct dependency order, drops the 2 config files. Stops on first failure. |
 | **CHECK** | Verifies cert, products, service, config files, and Umbrella folders. Prints a PASS/FAIL scorecard. Opens the Umbrella Policy Checker so you can confirm cloud registration. |
 
-Idempotent — already-installed components are skipped. Safe to re-run.
+Already-installed components are skipped on subsequent runs.
 
 ---
 
@@ -28,7 +28,7 @@ Idempotent — already-installed components are skipped. Safe to re-run.
 |------|---------|
 | `Install-Cisco.ps1` | The engine. All logic lives here. |
 | `Run-Install.cmd` | Double-click → full run (LOOK + INSTALL + CHECK). Self-elevates to admin. |
-| `Run-Preflight.cmd` | Double-click → LOOK only (read-only, installs nothing). |
+| `Run-Preflight.cmd` | Double-click → LOOK only. It installs nothing but writes a local log. |
 | `Run-DryRun.cmd` | Double-click → preview every action without executing anything. No admin needed. |
 | `README.md` | This file. |
 | `QUICKSTART.md` | One-page field reference. |
@@ -51,13 +51,15 @@ Idempotent — already-installed components are skipped. Safe to re-run.
 ### Safety ladder — run in this order
 
 ```
-Run-Preflight.cmd   →   does it find all the files?   (read-only, zero risk)
-Run-DryRun.cmd      →   what exactly would it do?      (read-only, zero risk)
+Run-Preflight.cmd   →   does it find all the files?   (no install actions)
+Run-DryRun.cmd      →   what exactly would it do?      (preview only)
 Run-Install.cmd     →   actually do it                 (admin, real changes)
 ```
 
-The first two are completely read-only. Run them on any machine — including
-production — with no risk.
+The first two skip certificate import, MSI installation, and configuration-file
+copies. They still create a local log under `C:\ProgramData\CiscoMigration\logs`.
+Test the workflow on a representative non-production endpoint and review the
+output before using it in production.
 
 ### Field steps (each client)
 
@@ -112,9 +114,9 @@ Each MSI also writes `msi_<module>_<timestamp>.log` in the same folder.
 
 ---
 
-## Testing without risking a client
+## Testing before using a client endpoint
 
-- **`Run-Preflight.cmd`** — safe on any machine. Run it to confirm file discovery works.
+- **`Run-Preflight.cmd`** — confirms file discovery without running install actions. It still writes a local log.
 - **`Run-DryRun.cmd`** — prints every msiexec command and file copy it *would* run, executes none of it.
 - **VM snapshot** — run `Run-Install.cmd` on a Windows VM, snapshot first, revert after. Real end-to-end test with an undo.
 
